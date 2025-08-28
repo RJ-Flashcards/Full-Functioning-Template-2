@@ -10,6 +10,32 @@ function norm(w) {
     .toLowerCase();
 }
 
+// Ensure the front has #wordText and #dupBadge (create if missing)
+function ensureFrontChildren() {
+  const front = document.getElementById('cardFront');
+  if (!front) return {};
+
+  let wordText = document.getElementById('wordText');
+  if (!wordText) {
+    wordText = document.createElement('span');
+    wordText.id = 'wordText';
+    front.appendChild(wordText);
+  }
+
+  let dupBadge = document.getElementById('dupBadge');
+  if (!dupBadge) {
+    dupBadge = document.createElement('span');
+    dupBadge.id = 'dupBadge';
+    dupBadge.className = 'dup-badge';
+    dupBadge.setAttribute('aria-label', 'Duplicate word');
+    dupBadge.setAttribute('title', 'Duplicate word');
+    dupBadge.textContent = '⚠️';
+    front.appendChild(dupBadge);
+  }
+
+  return { wordText, dupBadge };
+}
+
 function loadCardsFromCSV(data) {
   // data: array of rows [Word, Definition]
   cards = data
@@ -27,30 +53,23 @@ function loadCardsFromCSV(data) {
   // Identify duplicates
   duplicates = new Set(Object.keys(counts).filter(k => counts[k] > 1));
 
-  // …continue your existing init: currentIndex = 0; render; etc.
-  showCard(currentIndex);
+  // Render first card
+  showCard(typeof currentIndex === 'number' ? currentIndex : 0);
 }
 
-/* ⬇️ REPLACE your existing showCard with this version */
 function showCard(index) {
-  const card     = cards[index];
-  const wordText = document.getElementById('wordText'); // span inside #cardFront
-  const back     = document.getElementById('cardBack');
-  const dupBadge = document.getElementById('dupBadge');
+  const card = cards[index];
+  const back = document.getElementById('cardBack');
 
-  // Populate front/back
-  if (wordText) {
-    wordText.textContent = card?.word || '';
-  } else {
-    // Fallback if #wordText isn't present
-    const front = document.getElementById('cardFront');
-    if (front) front.textContent = card?.word || '';
-  }
-  back.textContent = card?.definition || '';
+  // Make sure front children exist (creates them if needed)
+  const { wordText, dupBadge } = ensureFrontChildren();
+  if (!wordText || !dupBadge || !back) return; // DOM not ready; nothing to do
 
-  // Toggle the badge using normalized key
-  if (dupBadge) {
-    const key = norm(card?.word);
-    dupBadge.style.display = key && duplicates.has(key) ? 'inline-block' : 'none';
-  }
+  // Populate
+  wordText.textContent = card?.word || '';
+  back.textContent     = card?.definition || '';
+
+  // Toggle badge
+  const key = norm(card?.word);
+  dupBadge.style.display = key && duplicates.has(key) ? 'inline-block' : 'none';
 }
