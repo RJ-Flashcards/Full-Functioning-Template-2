@@ -63,12 +63,16 @@ body {
     <select id="daySelector"></select>
   </div>
 
-  <div class="flashcard" id="flashcard">
-    <div class="flashcard-inner" id="flashcardInner">
-      <div class="flashcard-front" id="cardFront">Loading…</div>
-      <div class="flashcard-back" id="cardBack"></div>
+<div class="flashcard" id="flashcard">
+  <div class="flashcard-inner" id="flashcardInner">
+    <div class="flashcard-front" id="cardFront">
+      <span id="wordText">Loading…</span>
+      <span id="dupBadge" class="dup-badge" aria-label="Duplicate word" title="Duplicate word">⚠️</span>
     </div>
+    <div class="flashcard-back" id="cardBack"></div>
   </div>
+</div>
+
 
   <div class="buttons">
     <button id="prevBtn">Back</button>
