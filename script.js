@@ -1,83 +1,49 @@
+let cards = [];                 // current deck (Day or A-Z)
+let duplicates = new Set();     // words that repeat within this deck
 
-const sheetURL = 'https://raw.githubusercontent.com/RJ-Flashcards/Flashcard-app3/main/vocab.csv';
+function loadCardsFromCSV(data) {
+  // data: array of rows [Word, Definition]
+  cards = data
+    .filter(row => row && (row[0] || row[1]))     // skip empty rows
+    .map(row => ({ word: (row[0] || '').trim(), definition: (row[1] || '').trim() }));
 
-let flashcards = [];
-let currentCard = 0;
-let isFlipped = false;
+  // Count words in THIS deck
+  const counts = {};
+  cards.forEach(c => {
+    if (!c.word) return;
+    counts[c.word] = (counts[c.word] || 0) + 1;
+  });
 
-function fetchFlashcards() {
-  fetch(sheetURL)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to fetch CSV');
-      }
-      return response.text();
-    })
-    .then(data => {
-      const lines = data.trim().split('\n');
-      flashcards = lines.slice(1).map(line => {
-        const [term, definition] = line.split(',');
-        return { term: term.trim(), definition: definition.trim() };
-      });
-      shuffleFlashcards();
-      displayCard();
-    })
-    .catch(error => {
-      document.getElementById('card-front').innerText = 'Error loading flashcards.';
-      console.error('Error:', error);
-    });
+  // Identify duplicates
+  duplicates = new Set(Object.keys(counts).filter(w => counts[w] > 1));
+
+  // …continue your existing init: currentIndex = 0; render; etc.
+  showCard(currentIndex);
 }
 
-function shuffleFlashcards() {
-  for (let i = flashcards.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [flashcards[i], flashcards[j]] = [flashcards[j], flashcards[i]];
-  }
-}
+/* ⬇️ REPLACE your existing showCard with this version */
+function showCard(index) {
+  const card     = cards[index];
+  const wordText = document.getElementById('wordText'); // span inside #cardFront
+  const back     = document.getElementById('cardBack');
+  const dupBadge = document.getElementById('dupBadge');
 
-function displayCard() {
-  const front = document.getElementById('card-front');
-  const back = document.getElementById('card-back');
-  const card = flashcards[currentCard];
-
-  front.innerText = card.term;
-  back.innerText = card.definition;
-
-  // Keep the card in its current flipped state
-  const flashcard = document.getElementById('flashcard');
-  if (isFlipped) {
-    flashcard.classList.add('flipped');
+  // Populate front/back
+  if (wordText) {
+    wordText.textContent = card?.word || '';
   } else {
-    flashcard.classList.remove('flipped');
+    // Fallback in case #wordText wasn't added yet
+    const front = document.getElementById('cardFront');
+    if (front) front.textContent = card?.word || '';
+  }
+  back.textContent = card?.definition || '';
+
+  // Toggle the badge (visible only when the word is a duplicate within this deck)
+  if (dupBadge) {
+    if (card?.word && duplicates.has(card.word)) {
+      dupBadge.style.display = 'inline-block';
+    } else {
+      dupBadge.style.display = 'none';
+    }
   }
 }
-
-// ✅ Flip only on card tap (never on button press)
-document.getElementById('flashcard').addEventListener('click', (e) => {
-  if (e.target.tagName.toLowerCase() === 'button') {
-    e.stopPropagation();
-    return;
-  }
-  const flashcard = document.getElementById('flashcard');
-  flashcard.classList.toggle('flipped');
-  isFlipped = !isFlipped;
-});
-
-// ✅ Move to next card, preserve flip state
-document.getElementById('next-btn')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  currentCard = (currentCard + 1) % flashcards.length;
-  displayCard();
-});
-
-// ✅ Move to previous card, preserve flip state
-document.getElementById('back-btn')?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  currentCard = (currentCard - 1 + flashcards.length) % flashcards.length;
-  displayCard();
-});
-
-fetchFlashcards();
-
-
-
