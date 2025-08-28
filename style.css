@@ -44,7 +44,6 @@ body {
 .flipped {
   transform: rotateY(180deg);
 }
-.flashcard-front,
 /* Make the front a positioning context */
 .flashcard-front { position: relative; }
 
@@ -61,6 +60,7 @@ body {
   background: rgba(255, 235, 59, 0.9);  /* soft yellow bubble */
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   user-select: none;
+  z-index: 2; /* keep badge above the word */
 }
 
 .flashcard-back {
