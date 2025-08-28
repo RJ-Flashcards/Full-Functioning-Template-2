@@ -1,21 +1,31 @@
 let cards = [];                 // current deck (Day or A-Z)
 let duplicates = new Set();     // words that repeat within this deck
 
+// Normalize for duplicate matching (trim, collapse spaces, case-insensitive, NFC)
+function norm(w) {
+  return (w || '')
+    .normalize('NFC')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
 function loadCardsFromCSV(data) {
   // data: array of rows [Word, Definition]
   cards = data
     .filter(row => row && (row[0] || row[1]))     // skip empty rows
     .map(row => ({ word: (row[0] || '').trim(), definition: (row[1] || '').trim() }));
 
-  // Count words in THIS deck
+  // Count words in THIS deck (normalized)
   const counts = {};
   cards.forEach(c => {
-    if (!c.word) return;
-    counts[c.word] = (counts[c.word] || 0) + 1;
+    const key = norm(c.word);
+    if (!key) return;
+    counts[key] = (counts[key] || 0) + 1;
   });
 
   // Identify duplicates
-  duplicates = new Set(Object.keys(counts).filter(w => counts[w] > 1));
+  duplicates = new Set(Object.keys(counts).filter(k => counts[k] > 1));
 
   // …continue your existing init: currentIndex = 0; render; etc.
   showCard(currentIndex);
@@ -32,18 +42,15 @@ function showCard(index) {
   if (wordText) {
     wordText.textContent = card?.word || '';
   } else {
-    // Fallback in case #wordText wasn't added yet
+    // Fallback if #wordText isn't present
     const front = document.getElementById('cardFront');
     if (front) front.textContent = card?.word || '';
   }
   back.textContent = card?.definition || '';
 
-  // Toggle the badge (visible only when the word is a duplicate within this deck)
+  // Toggle the badge using normalized key
   if (dupBadge) {
-    if (card?.word && duplicates.has(card.word)) {
-      dupBadge.style.display = 'inline-block';
-    } else {
-      dupBadge.style.display = 'none';
-    }
+    const key = norm(card?.word);
+    dupBadge.style.display = key && duplicates.has(key) ? 'inline-block' : 'none';
   }
 }
